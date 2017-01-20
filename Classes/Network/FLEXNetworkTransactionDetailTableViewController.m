@@ -54,7 +54,7 @@ typedef UIViewController *(^FLEXNetworkDetailRowSelectionFuture)(void);
     self = [super initWithStyle:UITableViewStyleGrouped];
     if (self) {
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleTransactionUpdatedNotification:) name:kFLEXNetworkRecorderTransactionUpdatedNotification object:nil];
-        self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Copy curl" style:UIBarButtonItemStylePlain target:self action:@selector(copyButtonPressed:)];
+        self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Copy Data" style:UIBarButtonItemStylePlain target:self action:@selector(copyButtonPressed:)];
     }
     return self;
 }
@@ -121,7 +121,50 @@ typedef UIViewController *(^FLEXNetworkDetailRowSelectionFuture)(void);
 
 - (void)copyButtonPressed:(id)sender
 {
-    [[UIPasteboard generalPasteboard] setString:[FLEXNetworkCurlLogger curlCommandString:_transaction.request]];
+    NSString* networkDetailsString = [self networkDetailsStringValue];
+    [[UIPasteboard generalPasteboard] setString:networkDetailsString];
+}
+
+- (NSString*)networkDetailsStringValue {
+    NSMutableString* result = [NSMutableString string];
+    NSUInteger maxBytes = 40*1024;
+    for(FLEXNetworkDetailSection* detail in self.sections) {
+        if([detail isKindOfClass:[FLEXNetworkDetailSection class]]) {
+            [result appendFormat:@"%@\n", detail.title];
+            for(FLEXNetworkDetailRow* row in detail.rows) {
+                if([row isKindOfClass:[FLEXNetworkDetailRow class]]) {
+                    NSString* detailText = row.detailText;
+                    if([row.title isEqualToString:@"Request Body"] && [row.detailText isEqualToString:@"tap to view"]) {
+                        NSData* data = [FLEXNetworkTransactionDetailTableViewController postBodyDataForTransaction:self.transaction];
+                        if(data && data.length < maxBytes) {
+                            NSString* body = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+                            if(body.length) {
+                                detailText = body;
+                            }
+                        }
+                        else {
+                            detailText = [NSString stringWithFormat:@"%ld bytes %@", data.length, data.length == 0 ? @"(No Data)" : @"(too big to copy)"];
+                        }
+                    }
+                    else if([row.title isEqualToString:@"Response Body"] && [row.detailText isEqualToString:@"tap to view"]) {
+                        NSData *data = [[FLEXNetworkRecorder defaultRecorder] cachedResponseBodyForTransaction:self.transaction];
+                        if(data && data.length < maxBytes) {
+                            NSString* body = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+                            if(body.length) {
+                                detailText = body;
+                            }
+                        }
+                        else {
+                            detailText = [NSString stringWithFormat:@"%ld bytes %@", data.length, data.length == 0 ? @"(No Data)" : @"(too big to copy)"];
+                        }
+                    }
+                    [result appendFormat:@"%@ : %@\n", row.title, detailText];
+                }
+            }
+            [result appendFormat:@"\n"];
+        }
+    }
+    return result;
 }
 
 #pragma mark - Table view data source
