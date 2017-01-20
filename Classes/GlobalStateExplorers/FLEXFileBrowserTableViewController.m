@@ -86,6 +86,7 @@
 {
     [super viewDidLoad];
 
+    self.definesPresentationContext = YES;
     UIMenuItem *renameMenuItem = [[UIMenuItem alloc] initWithTitle:@"Rename" action:@selector(fileBrowserRename:)];
     UIMenuItem *deleteMenuItem = [[UIMenuItem alloc] initWithTitle:@"Delete" action:@selector(fileBrowserDelete:)];
     [UIMenuController sharedMenuController].menuItems = @[renameMenuItem, deleteMenuItem];
