@@ -144,7 +144,7 @@ typedef UIViewController *(^FLEXNetworkDetailRowSelectionFuture)(void);
                 if([row isKindOfClass:[FLEXNetworkDetailRow class]]) {
                     NSString* detailText = row.detailText;
                     if([row.title isEqualToString:@"Request Body"] && [row.detailText isEqualToString:@"tap to view"]) {
-                        NSData* data = [FLEXNetworkTransactionDetailTableViewController postBodyDataForTransaction:self.transaction];
+                        NSData* data = [FLEXNetworkTransactionDetailController postBodyDataForTransaction:self.transaction];
                         if(data && data.length < maxBytes) {
                             NSString* body = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
                             if(body.length) {
